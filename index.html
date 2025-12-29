@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Aplausómetro PRO - Batalla de Ruido</title>
+    <style>
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background-color: #111;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Evita barras de scroll cuando tiembla */
+        }
+
+        /* Animación de Temblor (Screen Shake) */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shaking {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+
+        h1 { margin-bottom: 5px; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; color: #fff; }
+        
+        .stage {
+            display: flex;
+            width: 90%;
+            height: 60%;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .team-column {
+            flex: 1;
+            height: 100%;
+            background: #222;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 4px solid #444;
+            transition: all 0.3s;
+            opacity: 0.6; /* Un poco apagados hasta que les toca */
+        }
+
+        .team-column.active-turn {
+            opacity: 1;
+            border-color: white;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .team-column.winner {
+            border-color: #ffd700;
+            box-shadow: 0 0 50px #ffd700;
+            z-index: 10;
+            transform: scale(1.05);
+        }
+
+        .bar {
+            width: 100%;
+            height: 0%;
+            transition: height 0.05s linear; /* Más rápido para respuesta instantánea */
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 10px;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #bar-a { background: linear-gradient(to top, #004d00, #00ff00); box-shadow: 0 0 20px #00ff00; }
+        #bar-b { background: linear-gradient(to top, #4d0000, #ff0000); box-shadow: 0 0 20px #ff0000; }
+
+        .label {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 2rem;
+            z-index: 10;
+            text-shadow: 2px 2px 4px black;
+        }
+
+        /* Overlay del Temporizador */
+        #timer-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px black;
+            display: none;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #222;
+            border-radius: 10px;
+            border: 1px solid #444;
+            z-index: 20;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+        button:active { transform: scale(0.95); }
+        
+        .btn-a { background-color: #00cc00; color: black; }
+        .btn-b { background-color: #cc0000; color: white; }
+        .btn-reset { background-color: #555; color: white; }
+
+        #status-display { margin-top: 10px; color: #aaa; font-family: monospace; }
+        
+        #winner-text {
+            font-size: 3rem;
+            color: gold;
+            text-shadow: 0 0 10px orange;
+            margin-top: 10px;
+            height: 50px; /* Espacio reservado */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>BATALLA DE RUIDO</h1>
+    <div id="winner-text"></div>
+
+    <div class="stage">
+        <div id="timer-overlay">5</div>
+
+        <div class="team-column" id="col-a">
+            <div class="label">CAMINO A</div>
+            <div id="bar-a" class="bar">0</div>
+        </div>
+
+        <div class="team-column" id="col-b">
+            <div class="label">CAMINO B</div>
+            <div id="bar-b" class="bar">0</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="startCountdown('A')" class="btn-a" id="btn-a">⏱️ 5s TURNO A</button>
+        <button onclick="startCountdown('B')" class="btn-b" id="btn-b" disabled>⏱️ 5s TURNO B</button>
+        <button onclick="resetAll()" class="btn-reset">🔄 Reiniciar</button>
+        <div id="status-display">Sistema listo.</div>
+    </div>
+
+<script>
+    let audioContext;
+    let analyser;
+    let microphone;
+    let javascriptNode;
+    let isListening = false;
+    let currentTeam = null;
+    let scoreA = 0;
+    let scoreB = 0;
+    
+    // TIEMPO DE JUEGO (en segundos)
+    const GAME_DURATION = 5;
+    const SENSITIVITY = 1.5; 
+
+    // Inicializar Audio Context
+    async function initAudio() {
+        if (!audioContext) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+                analyser.smoothingTimeConstant = 0.6; // Más responsivo
+                analyser.fftSize = 1024;
+
+                microphone.connect(analyser);
+                analyser.connect(javascriptNode);
+                javascriptNode.connect(audioContext.destination);
+
+                javascriptNode.onaudioprocess = processAudio;
+            } catch (e) {
+                alert("Error micrófono: " + e);
+            }
+        }
+    }
+
+    function processAudio() {
+        if (!isListening || !currentTeam) return;
+
+        const array = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(array);
+        let values = 0;
+        for (let i = 0; i < array.length; i++) values += array[i];
+        
+        let volume = Math.round((values / array.length) * SENSITIVITY); 
+        if (volume > 100) volume = 100;
+
+        // SCREEN SHAKE: Si el volumen es muy alto (>80), la pantalla tiembla
+        if (volume > 80) {
+            document.body.classList.add('shaking');
+        } else {
+            document.body.classList.remove('shaking');
+        }
+
+        updateGame(volume);
+    }
+
+    function updateGame(volume) {
+        const bar = document.getElementById(`bar-${currentTeam.toLowerCase()}`);
+        bar.style.height = volume + "%";
+        bar.innerText = volume;
+
+        // High Score Logic
+        if (currentTeam === 'A' && volume > scoreA) scoreA = volume;
+        if (currentTeam === 'B' && volume > scoreB) scoreB = volume;
+    }
+
+    function startCountdown(team) {
+        initAudio().then(() => {
+            // UI Setup
+            document.getElementById('btn-a').disabled = true;
+            document.getElementById('btn-b').disabled = true;
+            document.querySelectorAll('.team-column').forEach(c => c.classList.remove('active-turn'));
+            document.getElementById(`col-${team.toLowerCase()}`).classList.add('active-turn');
+            
+            const timerDisplay = document.getElementById('timer-overlay');
+            timerDisplay.style.display = 'block';
+            
+            let countdown = 3;
+            timerDisplay.innerText = "¡PREPARADOS!";
+            
+            // Cuenta regresiva 3, 2, 1
+            let prepInterval = setInterval(() => {
+                if(countdown > 0) {
+                    timerDisplay.innerText = countdown;
+                    countdown--;
+                } else {
+                    clearInterval(prepInterval);
+                    timerDisplay.innerText = "¡GRITEN!";
+                    startRecording(team);
+                }
+            }, 1000);
+        });
+    }
+
+    function startRecording(team) {
+        isListening = true;
+        currentTeam = team;
+        let timeLeft = GAME_DURATION;
+        const timerDisplay = document.getElementById('timer-overlay');
+
+        // Timer del juego (5s)
+        let gameInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft >= 0) {
+               // Opcional: mostrar tiempo restante pequeño
+            } else {
+                // FIN DEL TIEMPO
+                clearInterval(gameInterval);
+                stopRecording(team);
+            }
+        }, 1000);
+    }
+
+    function stopRecording(team) {
+        isListening = false;
+        document.body.classList.remove('shaking'); // Parar temblor
+        document.getElementById('timer-overlay').style.display = 'none';
+
+        // Fijar puntaje visualmente
+        const finalScore = (team === 'A') ? scoreA : scoreB;
+        const bar = document.getElementById(`bar-${team.toLowerCase()}`);
+        bar.style.height = finalScore + "%";
+        bar.innerText = finalScore;
+
+        // Lógica de turnos
+        if (team === 'A') {
+            document.getElementById('status-display').innerText = "Turno A terminado. Listo para B.";
+            document.getElementById('btn-b').disabled = false;
+            document.getElementById(`col-a`).classList.remove('active-turn');
+        } else {
+            document.getElementById('status-display').innerText = "Turno B terminado. Calculando ganador...";
+            document.getElementById(`col-b`).classList.remove('active-turn');
+            declareWinner();
+        }
+        currentTeam = null;
+    }
+
+    function declareWinner() {
+        const winnerText = document.getElementById('winner-text');
+        
+        if (scoreA > scoreB) {
+            winnerText.innerText = "¡GANADOR: CAMINO A!";
+            document.getElementById('col-a').classList.add('winner');
+        } else if (scoreB > scoreA) {
+            winnerText.innerText = "¡GANADOR: CAMINO B!";
+            document.getElementById('col-b').classList.add('winner');
+        } else {
+            winnerText.innerText = "¡EMPATE! (Griten de nuevo)";
+        }
+    }
+
+    function resetAll() {
+        isListening = false;
+        currentTeam = null;
+        scoreA = 0; scoreB = 0;
+        document.getElementById('bar-a').style.height = "0%";
+        document.getElementById('bar-a').innerText = "0";
+        document.getElementById('bar-b').style.height = "0%";
+        document.getElementById('bar-b').innerText = "0";
+        document.getElementById('btn-a').disabled = false;
+        document.getElementById('btn-b').disabled = true;
+        document.getElementById('winner-text').innerText = "";
+        document.querySelectorAll('.team-column').forEach(c => {
+            c.classList.remove('active-turn', 'winner');
+        });
+    }
+</script>
+</body>
+</html>
