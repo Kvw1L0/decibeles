@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batalla de Ruido - Futurista</title>
+    <title>Batalla de Ruido - Futurista Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
+        /* ================= VARIABLES & GENERAL ================= */
         :root {
             --neon-blue: #00f3ff;
             --neon-green: #39ff14;
@@ -20,7 +21,6 @@
         body {
             font-family: 'Orbitron', sans-serif;
             background-color: var(--dark-bg);
-            /* Fondo con un sutil degradado radial para dar profundidad */
             background-image: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
             color: var(--neon-blue);
             text-align: center;
@@ -34,7 +34,7 @@
             letter-spacing: 1px;
         }
 
-        /* Pantalla de Inicio (Overlay) */
+        /* ================= PANTALLA DE INICIO ================= */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 999;
@@ -45,13 +45,10 @@
             font-size: 3rem; margin-bottom: 20px; color: var(--neon-blue);
             text-shadow: 0 0 20px var(--neon-blue);
         }
-        #start-screen p {
-            font-size: 1.2rem; color: white; animation: pulse 2s infinite;
-        }
-
+        #start-screen p { font-size: 1.2rem; color: white; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         
-        /* Animación de Temblor */
+        /* ================= ANIMACIONES ================= */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-2px, 0px) rotate(1deg); }
             40% { transform: translate(1px, -1px) rotate(1deg); } 60% { transform: translate(-2px, 1px) rotate(0deg); }
@@ -59,54 +56,60 @@
         }
         .shaking { animation: shake 0.3s infinite; }
 
-        /* Títulos y Textos */
+        /* ================= ESTRUCTURA PRINCIPAL ================= */
         h2 {
             margin: 0; font-size: 1.8rem; text-transform: uppercase;
             text-shadow: 0 0 10px var(--neon-blue); opacity: 0.9;
             margin-bottom: 10px;
         }
         #winner-text {
-            min-height: 60px; /* Espacio reservado para que no salte */
-            font-size: 3rem; font-weight: 900; color: #fff;
+            min-height: 60px; font-size: 3rem; font-weight: 900; color: #fff;
             text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink);
             margin: 10px 0 20px 0;
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* Escenario Principal */
         .stage {
             display: flex; width: 90%; max-width: 1000px; height: 50vh; gap: 30px;
             justify-content: center; align-items: flex-end; position: relative;
             margin-bottom: 30px;
         }
 
-        /* Columnas de los Equipos */
+        /* ================= COLUMNAS DE EQUIPO ================= */
         .team-column {
             flex: 1; height: 100%;
             background: rgba(0,0,0,0.5); border-radius: 15px;
-            position: relative; overflow: hidden;
+            /* Importante: relative para que los hijos absolute se posicionen respecto a esto */
+            position: relative; 
+            overflow: hidden;
             display: flex; flex-direction: column; justify-content: flex-end;
             border: 2px solid rgba(255,255,255,0.1);
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.1) inset;
             transition: all 0.3s ease;
         }
         .team-column.active-turn {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 30px var(--neon-blue), 0 0 50px var(--neon-blue) inset;
+            border-color: var(--neon-blue); box-shadow: 0 0 30px var(--neon-blue), 0 0 50px var(--neon-blue) inset;
         }
         .team-column.winner {
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 60px var(--neon-pink), 0 0 80px var(--neon-pink) inset;
+            border-color: var(--neon-pink); box-shadow: 0 0 60px var(--neon-pink), 0 0 80px var(--neon-pink) inset;
             z-index: 10; transform: scale(1.02);
         }
 
-        /* Barras de Energía */
+        /* NUEVO: Visualización del Puntaje (Fijo arriba) */
+        .score-display {
+            position: absolute;
+            top: 25%; /* Posición fija desde arriba */
+            left: 0; width: 100%;
+            text-align: center; font-size: 7rem; font-weight: 900; color: #fff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            z-index: 20; /* Por encima de todo */
+        }
+
+        /* MODIFICADO: Barras de Energía (Ya no contienen texto) */
         .bar {
             width: 100%; height: 0%; transition: height 0.1s linear;
-            display: flex; align-items: flex-start; justify-content: center;
-            padding-top: 15px; font-size: 4rem; font-weight: 900; color: #fff;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
             box-sizing: border-box;
+            z-index: 5; /* Detrás del texto */
         }
         #bar-a {
             background: linear-gradient(to top, #003b00, var(--neon-green));
@@ -119,13 +122,16 @@
             box-shadow: 0 -5px 20px var(--neon-red);
         }
 
+        /* Etiquetas inferiores */
         .label {
-            position: absolute; bottom: 15px; width: 100%;
+            position: absolute; bottom: 25px; width: 100%;
             font-size: 1.8rem; font-weight: bold; text-transform: uppercase;
-            text-shadow: 0 0 10px black; z-index: 10; color: white;
+            text-shadow: 0 0 10px black; z-index: 30; color: white;
+            background: rgba(0,0,0,0.3); /* Un poco de fondo para legibilidad si la barra está baja */
+            padding: 5px 0;
         }
-        #col-a .label { text-shadow: 0 0 10px var(--neon-green); }
-        #col-b .label { text-shadow: 0 0 10px var(--neon-red); }
+        #col-a .label { text-shadow: 0 0 15px var(--neon-green); }
+        #col-b .label { text-shadow: 0 0 15px var(--neon-red); }
 
         /* Timer Overlay */
         #timer-overlay {
@@ -135,28 +141,19 @@
             display: none; z-index: 100; pointer-events: none;
         }
 
-        /* Panel de Control Futurista */
+        /* ================= PANEL DE CONTROL ================= */
         .control-panel {
-            background: var(--panel-bg);
-            padding: 20px 30px;
-            border-radius: 20px;
+            background: var(--panel-bg); padding: 20px 30px; border-radius: 20px;
             border: 2px solid var(--neon-blue);
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.1);
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            justify-content: center;
+            display: flex; gap: 25px; align-items: center; justify-content: center;
             backdrop-filter: blur(10px);
         }
-
         .buttons-group { display: flex; gap: 15px; }
-
         button {
-            font-family: 'Orbitron', sans-serif;
-            padding: 12px 25px; font-size: 1rem; cursor: pointer;
+            font-family: 'Orbitron', sans-serif; padding: 12px 25px; font-size: 1rem; cursor: pointer;
             border: 2px solid; border-radius: 8px; font-weight: 700;
-            text-transform: uppercase; transition: all 0.2s;
-            background: rgba(0,0,0,0.3); color: white;
+            text-transform: uppercase; transition: all 0.2s; background: rgba(0,0,0,0.3); color: white;
             box-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
         button:active { transform: scale(0.96); }
@@ -164,33 +161,24 @@
         
         .btn-a { border-color: var(--neon-green); color: var(--neon-green); }
         .btn-a:hover:not(:disabled) { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
-        
         .btn-b { border-color: var(--neon-red); color: var(--neon-red); }
         .btn-b:hover:not(:disabled) { background: var(--neon-red); color: black; box-shadow: 0 0 20px var(--neon-red); }
-        
         .btn-reset { border-color: var(--neon-blue); color: var(--neon-blue); }
         .btn-reset:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 20px var(--neon-blue); }
 
-        /* Slider de Sensibilidad Estilizado */
         .slider-container {
-            display: flex; flex-direction: column;
-            align-items: center;
-            padding-left: 25px;
-            border-left: 2px solid rgba(0, 243, 255, 0.3);
+            display: flex; flex-direction: column; align-items: center;
+            padding-left: 25px; border-left: 2px solid rgba(0, 243, 255, 0.3);
         }
-        .slider-container label {
-            font-size: 0.8rem; color: var(--neon-blue); margin-bottom: 8px; text-transform: uppercase;
-        }
+        .slider-container label { font-size: 0.8rem; color: var(--neon-blue); margin-bottom: 8px; text-transform: uppercase; }
         input[type=range] {
-            -webkit-appearance: none; width: 180px; height: 8px;
-            background: rgba(0,0,0,0.5); border-radius: 5px; outline: none;
+            -webkit-appearance: none; width: 180px; height: 8px; background: rgba(0,0,0,0.5); border-radius: 5px; outline: none;
             border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2) inset;
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
             background: var(--neon-blue); border-radius: 50%; cursor: pointer;
-            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
-            border: 2px solid white;
+            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue); border: 2px solid white;
         }
     </style>
 </head>
@@ -206,13 +194,17 @@
 
     <div class="stage">
         <div id="timer-overlay">5</div>
+        
         <div class="team-column" id="col-a">
+            <div id="score-a" class="score-display">0</div> 
             <div class="label">CAMINO A</div>
-            <div id="bar-a" class="bar">0</div>
+            <div id="bar-a" class="bar"></div>
         </div>
+        
         <div class="team-column" id="col-b">
+            <div id="score-b" class="score-display">0</div>
             <div class="label">CAMINO B</div>
-            <div id="bar-b" class="bar">0</div>
+            <div id="bar-b" class="bar"></div>
         </div>
     </div>
 
@@ -222,7 +214,6 @@
             <button onclick="startCountdown('B')" class="btn-b" id="btn-b" disabled>TURNO B</button>
             <button onclick="resetAll()" class="btn-reset">REINICIAR</button>
         </div>
-
         <div class="slider-container">
             <label>SENSIBILIDAD: <span id="sens-val" style="color: white; font-weight: bold;">1.5</span></label>
             <input type="range" id="sensitivity" min="0.1" max="5.0" step="0.1" value="1.5" oninput="updateSensitivity(this.value)">
@@ -230,15 +221,12 @@
     </div>
 
 <script>
-    // =========================================
-    // LÓGICA DEL JUEGO (Idéntica a la anterior)
-    // =========================================
+    // ================= LÓGICA DEL JUEGO =================
     let audioContext; let analyser; let microphone; let javascriptNode;
     let isListening = false; let currentTeam = null;
     let scoreA = 0; let scoreB = 0;
-    
-    const GAME_DURATION = 5; // segundos de grito
-    let SENSITIVITY = 1.5;   // Valor inicial
+    const GAME_DURATION = 5;
+    let SENSITIVITY = 1.5;
 
     async function unlockAudio() {
         try {
@@ -274,9 +262,16 @@
     }
 
     function updateGame(volume) {
-        const bar = document.getElementById(`bar-${currentTeam.toLowerCase()}`);
+        const teamSlug = currentTeam.toLowerCase();
+        
+        // MODIFICADO: Actualizamos la altura de la barra
+        const bar = document.getElementById(`bar-${teamSlug}`);
         bar.style.height = volume + "%";
-        bar.innerText = volume;
+        
+        // NUEVO: Actualizamos el texto del puntaje separado
+        const scoreDisplay = document.getElementById(`score-${teamSlug}`);
+        scoreDisplay.innerText = volume;
+
         if (currentTeam === 'A' && volume > scoreA) scoreA = volume;
         if (currentTeam === 'B' && volume > scoreB) scoreB = volume;
     }
@@ -311,7 +306,10 @@
         document.getElementById('timer-overlay').style.display = 'none';
         const finalScore = (team === 'A') ? scoreA : scoreB;
         const bar = document.getElementById(`bar-${team.toLowerCase()}`);
-        bar.style.height = finalScore + "%"; bar.innerText = finalScore;
+        bar.style.height = finalScore + "%";
+        // MODIFICADO: Aseguramos que el puntaje final se muestre en el display superior
+        document.getElementById(`score-${team.toLowerCase()}`).innerText = finalScore;
+
         if (team === 'A') {
             document.getElementById('btn-b').disabled = false;
             document.getElementById(`col-a`).classList.remove('active-turn');
@@ -344,8 +342,13 @@
 
     function resetAll() {
         isListening = false; currentTeam = null; scoreA = 0; scoreB = 0;
-        document.getElementById('bar-a').style.height = "0%"; document.getElementById('bar-a').innerText = "0";
-        document.getElementById('bar-b').style.height = "0%"; document.getElementById('bar-b').innerText = "0";
+        // Reset barras
+        document.getElementById('bar-a').style.height = "0%";
+        document.getElementById('bar-b').style.height = "0%";
+        // NUEVO: Reset puntajes visuales
+        document.getElementById('score-a').innerText = "0";
+        document.getElementById('score-b').innerText = "0";
+        
         document.getElementById('btn-a').disabled = false; document.getElementById('btn-b').disabled = true;
         document.getElementById('winner-text').innerText = "";
         document.querySelectorAll('.team-column').forEach(c => { c.classList.remove('active-turn', 'winner'); });
