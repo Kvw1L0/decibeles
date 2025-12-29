@@ -2,104 +2,203 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Aplausómetro PRO - Evento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalla de Ruido - Futurista</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-green: #39ff14;
+            --neon-pink: #ff00ff;
+            --neon-red: #ff3131;
+            --dark-bg: #0a0a12;
+            --panel-bg: rgba(20, 20, 30, 0.8);
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #050505;
-            color: white;
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--dark-bg);
+            /* Fondo con un sutil degradado radial para dar profundidad */
+            background-image: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            color: var(--neon-blue);
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             overflow: hidden;
+            letter-spacing: 1px;
         }
 
         /* Pantalla de Inicio (Overlay) */
         #start-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; backdrop-filter: blur(10px);
         }
-        #start-screen h1 { font-size: 3rem; margin-bottom: 20px; color: #00ffcc; }
-        #start-screen p { font-size: 1.5rem; color: #aaa; animation: pulse 1.5s infinite; }
+        #start-screen h1 {
+            font-size: 3rem; margin-bottom: 20px; color: var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue);
+        }
+        #start-screen p {
+            font-size: 1.2rem; color: white; animation: pulse 2s infinite;
+        }
 
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         
         /* Animación de Temblor */
         @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+            0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-2px, 0px) rotate(1deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); } 60% { transform: translate(-2px, 1px) rotate(0deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); } 100% { transform: translate(1px, -1px) rotate(-1deg); }
         }
-        .shaking { animation: shake 0.5s infinite; }
+        .shaking { animation: shake 0.3s infinite; }
 
-        /* Estructura del juego */
-        h2 { margin: 0; font-size: 2rem; letter-spacing: 3px; opacity: 0.8; }
-        #winner-text { height: 60px; font-size: 3.5rem; color: gold; text-shadow: 0 0 20px orange; margin: 10px 0; font-weight: bold;}
+        /* Títulos y Textos */
+        h2 {
+            margin: 0; font-size: 1.8rem; text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-blue); opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        #winner-text {
+            min-height: 60px; /* Espacio reservado para que no salte */
+            font-size: 3rem; font-weight: 900; color: #fff;
+            text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink);
+            margin: 10px 0 20px 0;
+            display: flex; align-items: center; justify-content: center;
+        }
 
+        /* Escenario Principal */
         .stage {
-            display: flex; width: 90%; height: 55%; gap: 30px;
+            display: flex; width: 90%; max-width: 1000px; height: 50vh; gap: 30px;
             justify-content: center; align-items: flex-end; position: relative;
+            margin-bottom: 30px;
         }
 
+        /* Columnas de los Equipos */
         .team-column {
             flex: 1; height: 100%;
-            background: #1a1a1a; border-radius: 20px;
+            background: rgba(0,0,0,0.5); border-radius: 15px;
             position: relative; overflow: hidden;
             display: flex; flex-direction: column; justify-content: flex-end;
-            border: 3px solid #333; transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1) inset;
+            transition: all 0.3s ease;
         }
-        .team-column.active-turn { border-color: white; box-shadow: 0 0 40px rgba(255,255,255,0.15); }
-        .team-column.winner { border-color: #ffd700; box-shadow: 0 0 60px #ffd700; z-index: 10; transform: scale(1.03); }
+        .team-column.active-turn {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 30px var(--neon-blue), 0 0 50px var(--neon-blue) inset;
+        }
+        .team-column.winner {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 60px var(--neon-pink), 0 0 80px var(--neon-pink) inset;
+            z-index: 10; transform: scale(1.02);
+        }
 
-        .bar { width: 100%; height: 0%; transition: height 0.1s linear; display: flex; align-items: flex-start; justify-content: center; padding-top: 15px; font-size: 4rem; font-weight: 900; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
-        #bar-a { background: linear-gradient(to top, #006400, #00ff00); color: #eaffea; }
-        #bar-b { background: linear-gradient(to top, #640000, #ff0000); color: #ffeaea; }
+        /* Barras de Energía */
+        .bar {
+            width: 100%; height: 0%; transition: height 0.1s linear;
+            display: flex; align-items: flex-start; justify-content: center;
+            padding-top: 15px; font-size: 4rem; font-weight: 900; color: #fff;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            box-sizing: border-box;
+        }
+        #bar-a {
+            background: linear-gradient(to top, #003b00, var(--neon-green));
+            border-top: 3px solid var(--neon-green);
+            box-shadow: 0 -5px 20px var(--neon-green);
+        }
+        #bar-b {
+            background: linear-gradient(to top, #4a0000, var(--neon-red));
+            border-top: 3px solid var(--neon-red);
+            box-shadow: 0 -5px 20px var(--neon-red);
+        }
 
-        .label { position: absolute; bottom: 20px; width: 100%; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 4px black; z-index: 10; }
+        .label {
+            position: absolute; bottom: 15px; width: 100%;
+            font-size: 1.8rem; font-weight: bold; text-transform: uppercase;
+            text-shadow: 0 0 10px black; z-index: 10; color: white;
+        }
+        #col-a .label { text-shadow: 0 0 10px var(--neon-green); }
+        #col-b .label { text-shadow: 0 0 10px var(--neon-red); }
 
         /* Timer Overlay */
-        #timer-overlay { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 10rem; font-weight: 900; color: white; text-shadow: 0 0 30px black; display: none; z-index: 100; pointer-events: none; }
+        #timer-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 12rem; font-weight: 900; color: white;
+            text-shadow: 0 0 30px var(--neon-blue), 0 0 60px var(--neon-blue);
+            display: none; z-index: 100; pointer-events: none;
+        }
 
-        /* Controles */
-        .controls { margin-top: 20px; padding: 15px; background: #222; border-radius: 12px; border: 1px solid #444; display: flex; gap: 15px; align-items: center; }
-        button { padding: 12px 25px; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: transform 0.1s; }
-        button:active { transform: scale(0.95); }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
-        .btn-a { background-color: #00cc00; color: black; }
-        .btn-b { background-color: #cc0000; color: white; }
-        .btn-reset { background-color: #555; color: white; }
+        /* Panel de Control Futurista */
+        .control-panel {
+            background: var(--panel-bg);
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.1);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
 
-        /* Slider de Sensibilidad */
-        .slider-container { display: flex; flex-direction: column; margin-left: 20px; border-left: 1px solid #555; padding-left: 20px; }
-        .slider-container label { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
-        input[type=range] { width: 150px; cursor: pointer; }
+        .buttons-group { display: flex; gap: 15px; }
+
+        button {
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px 25px; font-size: 1rem; cursor: pointer;
+            border: 2px solid; border-radius: 8px; font-weight: 700;
+            text-transform: uppercase; transition: all 0.2s;
+            background: rgba(0,0,0,0.3); color: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; border-color: #555 !important; color: #888 !important; }
+        
+        .btn-a { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-a:hover:not(:disabled) { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+        
+        .btn-b { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn-b:hover:not(:disabled) { background: var(--neon-red); color: black; box-shadow: 0 0 20px var(--neon-red); }
+        
+        .btn-reset { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .btn-reset:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 20px var(--neon-blue); }
+
+        /* Slider de Sensibilidad Estilizado */
+        .slider-container {
+            display: flex; flex-direction: column;
+            align-items: center;
+            padding-left: 25px;
+            border-left: 2px solid rgba(0, 243, 255, 0.3);
+        }
+        .slider-container label {
+            font-size: 0.8rem; color: var(--neon-blue); margin-bottom: 8px; text-transform: uppercase;
+        }
+        input[type=range] {
+            -webkit-appearance: none; width: 180px; height: 8px;
+            background: rgba(0,0,0,0.5); border-radius: 5px; outline: none;
+            border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2) inset;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
+            background: var(--neon-blue); border-radius: 50%; cursor: pointer;
+            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
 
     <div id="start-screen" onclick="unlockAudio()">
-        <h1>🔈 SISTEMA DE VOTACIÓN</h1>
-        <p>Hacer clic en cualquier parte para activar micrófono</p>
+        <h1>[ SISTEMA DE SONIDO ]</h1>
+        <p>&gt; HAGA CLIC PARA INICIAR SECUENCIA &lt;</p>
     </div>
 
     <h2>¿QUIÉN GRITA MÁS FUERTE?</h2>
@@ -117,32 +216,30 @@
         </div>
     </div>
 
-    <div class="controls">
-        <button onclick="startCountdown('A')" class="btn-a" id="btn-a">⏱️ TURNO A</button>
-        <button onclick="startCountdown('B')" class="btn-b" id="btn-b" disabled>⏱️ TURNO B</button>
-        <button onclick="resetAll()" class="btn-reset">🔄 Reiniciar</button>
+    <div class="control-panel">
+        <div class="buttons-group">
+            <button onclick="startCountdown('A')" class="btn-a" id="btn-a">TURNO A</button>
+            <button onclick="startCountdown('B')" class="btn-b" id="btn-b" disabled>TURNO B</button>
+            <button onclick="resetAll()" class="btn-reset">REINICIAR</button>
+        </div>
 
         <div class="slider-container">
-            <label>Sensibilidad Micrófono: <span id="sens-val">1.5</span></label>
+            <label>SENSIBILIDAD: <span id="sens-val" style="color: white; font-weight: bold;">1.5</span></label>
             <input type="range" id="sensitivity" min="0.1" max="5.0" step="0.1" value="1.5" oninput="updateSensitivity(this.value)">
         </div>
     </div>
 
 <script>
-    let audioContext;
-    let analyser;
-    let microphone;
-    let javascriptNode;
-    let isListening = false;
-    let currentTeam = null;
-    let scoreA = 0;
-    let scoreB = 0;
+    // =========================================
+    // LÓGICA DEL JUEGO (Idéntica a la anterior)
+    // =========================================
+    let audioContext; let analyser; let microphone; let javascriptNode;
+    let isListening = false; let currentTeam = null;
+    let scoreA = 0; let scoreB = 0;
     
-    // Configuración
     const GAME_DURATION = 5; // segundos de grito
     let SENSITIVITY = 1.5;   // Valor inicial
 
-    // 1. DESBLOQUEO INICIAL (Soluciona problemas de permisos)
     async function unlockAudio() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -150,21 +247,12 @@
             analyser = audioContext.createAnalyser();
             microphone = audioContext.createMediaStreamSource(stream);
             javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-
-            analyser.smoothingTimeConstant = 0.6;
-            analyser.fftSize = 1024;
-
-            microphone.connect(analyser);
-            analyser.connect(javascriptNode);
-            javascriptNode.connect(audioContext.destination);
-
+            analyser.smoothingTimeConstant = 0.6; analyser.fftSize = 1024;
+            microphone.connect(analyser); analyser.connect(javascriptNode); javascriptNode.connect(audioContext.destination);
             javascriptNode.onaudioprocess = processAudio;
-
-            // Ocultar pantalla de inicio
             document.getElementById('start-screen').style.display = 'none';
         } catch (e) {
-            alert("Error: No se pudo acceder al micrófono. Verifica los permisos en el candado de la URL.");
-            console.error(e);
+            alert("Error: No se pudo acceder al micrófono. Verifica los permisos.");
         }
     }
 
@@ -175,22 +263,13 @@
 
     function processAudio() {
         if (!isListening || !currentTeam) return;
-
         const array = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(array);
-        let values = 0;
-        for (let i = 0; i < array.length; i++) values += array[i];
-        
-        // Aquí aplicamos la sensibilidad ajustable
+        let values = 0; for (let i = 0; i < array.length; i++) values += array[i];
         let volume = Math.round((values / array.length) * SENSITIVITY); 
-        
-        // Limites visuales 0-100
         if (volume > 100) volume = 100;
-
-        // Screen Shake
         if (volume > 85) document.body.classList.add('shaking');
         else document.body.classList.remove('shaking');
-
         updateGame(volume);
     }
 
@@ -198,53 +277,31 @@
         const bar = document.getElementById(`bar-${currentTeam.toLowerCase()}`);
         bar.style.height = volume + "%";
         bar.innerText = volume;
-
         if (currentTeam === 'A' && volume > scoreA) scoreA = volume;
         if (currentTeam === 'B' && volume > scoreB) scoreB = volume;
     }
 
     function startCountdown(team) {
-        // Asegurarse de que el audioContext esté activo (por si acaso)
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-
-        // UI
-        document.getElementById('btn-a').disabled = true;
-        document.getElementById('btn-b').disabled = true;
+        if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+        document.getElementById('btn-a').disabled = true; document.getElementById('btn-b').disabled = true;
         document.querySelectorAll('.team-column').forEach(c => c.classList.remove('active-turn'));
         document.getElementById(`col-${team.toLowerCase()}`).classList.add('active-turn');
-        
         const timerDisplay = document.getElementById('timer-overlay');
         timerDisplay.style.display = 'block';
-        
         let countdown = 3;
-        timerDisplay.innerText = "¡LISTOS!";
-        
+        timerDisplay.innerText = "READY";
         let prepInterval = setInterval(() => {
-            if(countdown > 0) {
-                timerDisplay.innerText = countdown;
-                countdown--;
-            } else {
-                clearInterval(prepInterval);
-                timerDisplay.innerText = "¡GRITEN!";
-                startRecording(team);
-            }
+            if(countdown > 0) { timerDisplay.innerText = countdown; countdown--; }
+            else { clearInterval(prepInterval); timerDisplay.innerText = "¡GO!"; startRecording(team); }
         }, 1000);
     }
 
     function startRecording(team) {
-        isListening = true;
-        currentTeam = team;
+        isListening = true; currentTeam = team;
         let timeLeft = GAME_DURATION;
-        const timerDisplay = document.getElementById('timer-overlay');
-
         let gameInterval = setInterval(() => {
             timeLeft--;
-            if (timeLeft < 0) {
-                clearInterval(gameInterval);
-                stopRecording(team);
-            }
+            if (timeLeft < 0) { clearInterval(gameInterval); stopRecording(team); }
         }, 1000);
     }
 
@@ -252,13 +309,9 @@
         isListening = false;
         document.body.classList.remove('shaking');
         document.getElementById('timer-overlay').style.display = 'none';
-
-        // Fijar puntaje
         const finalScore = (team === 'A') ? scoreA : scoreB;
         const bar = document.getElementById(`bar-${team.toLowerCase()}`);
-        bar.style.height = finalScore + "%";
-        bar.innerText = finalScore;
-
+        bar.style.height = finalScore + "%"; bar.innerText = finalScore;
         if (team === 'A') {
             document.getElementById('btn-b').disabled = false;
             document.getElementById(`col-a`).classList.remove('active-turn');
@@ -271,58 +324,31 @@
 
     function declareWinner() {
         const winnerText = document.getElementById('winner-text');
-        
         if (scoreA > scoreB) {
             winnerText.innerText = "¡GANA CAMINO A!";
-            document.getElementById('col-a').classList.add('winner');
-            launchConfetti();
+            document.getElementById('col-a').classList.add('winner'); launchConfetti('#39ff14');
         } else if (scoreB > scoreA) {
             winnerText.innerText = "¡GANA CAMINO B!";
-            document.getElementById('col-b').classList.add('winner');
-            launchConfetti();
-        } else {
-            winnerText.innerText = "¡EMPATE!";
-        }
+            document.getElementById('col-b').classList.add('winner'); launchConfetti('#ff3131');
+        } else { winnerText.innerText = "¡EMPATE!"; }
     }
 
-    function launchConfetti() {
-        var duration = 3 * 1000;
-        var end = Date.now() + duration;
-
+    function launchConfetti(colorHex) {
+        var duration = 3 * 1000; var end = Date.now() + duration;
         (function frame() {
-            confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 }
-            });
-            confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 }
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: [colorHex, '#ffffff'] });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: [colorHex, '#ffffff'] });
+            if (Date.now() < end) requestAnimationFrame(frame);
         }());
     }
 
     function resetAll() {
-        isListening = false;
-        currentTeam = null;
-        scoreA = 0; scoreB = 0;
-        document.getElementById('bar-a').style.height = "0%";
-        document.getElementById('bar-a').innerText = "0";
-        document.getElementById('bar-b').style.height = "0%";
-        document.getElementById('bar-b').innerText = "0";
-        document.getElementById('btn-a').disabled = false;
-        document.getElementById('btn-b').disabled = true;
+        isListening = false; currentTeam = null; scoreA = 0; scoreB = 0;
+        document.getElementById('bar-a').style.height = "0%"; document.getElementById('bar-a').innerText = "0";
+        document.getElementById('bar-b').style.height = "0%"; document.getElementById('bar-b').innerText = "0";
+        document.getElementById('btn-a').disabled = false; document.getElementById('btn-b').disabled = true;
         document.getElementById('winner-text').innerText = "";
-        document.querySelectorAll('.team-column').forEach(c => {
-            c.classList.remove('active-turn', 'winner');
-        });
+        document.querySelectorAll('.team-column').forEach(c => { c.classList.remove('active-turn', 'winner'); });
     }
 </script>
 </body>
